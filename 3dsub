@@ -1,0 +1,67 @@
+#! /usr/bin/env perl
+# Convert 2d subtitles in SRT format to 3D SBS, in ASS format.
+# HAJ <heitor.adao@gmail.com>
+
+use v5.22;
+use feature qw(signatures);
+use strict;
+use warnings;
+
+sub traduz_numero($numero)
+{
+    if ($numero =~ m/(\d+):(\d+):(\d+),(\d+)/) {
+        my $temp = substr $4, 0, 2;
+        return sprintf "%d:%02d:%02d\.%s", $1, $2, $3, $temp;
+    }
+}
+
+
+sub read_subtitle_part()
+{
+    $_ = <>;
+    if (!$_ || ! (/(\d+)\R$/)) {
+        return 0;
+        #say "index $1";
+    }
+
+    my $start;
+    my $finish;
+
+    $_ = <>;
+    if (/(\d+:\d+:\d+,\d+) --> (\d+:\d+:\d+,\d+)/) {
+        $start  = traduz_numero $1;
+        $finish = traduz_numero $2;
+    }
+
+    my $texto = <>;
+    $texto =~ s/\R//;
+    my $line;
+    while (! (($line = <>) =~ /^\R$/)) {
+        $line =~ s/\R//;
+        $texto .= '\N' . $line;
+    }
+    say "Dialogue: 0,$start,$finish,Default,,0000,0192,0000,,$texto";
+    say "Dialogue: 0,$start,$finish,Default,,0192,0000,0000,,$texto";
+    1;
+}
+
+say '[Script Info]
+; 3D subtitle conversor by HAJ
+Title: The.Little.Prince.2015.BRRip.XviD.MP3-R
+ScriptType: v4.00+
+Collisions: Normal
+PlayResX: 384
+PlayResY: 288
+PlayDepth: 0
+Timer: 100.0
+WrapStyle: 0
+
+[v4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default, Arial, 17, &H00FFFFFF, &H00000000, &H00000000, &H00000000, 0, 0, 0, 0, 50, 100, 0, 0, 1, 1, 0, 2, 0, 0, 15, 0
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text';
+
+
+while (read_subtitle_part) {}
